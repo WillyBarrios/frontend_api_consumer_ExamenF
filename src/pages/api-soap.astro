@@ -28,13 +28,13 @@ import Layout from '../layouts/Layout.astro';
 
 			<div class="card">
 				<h3>⚡ Acciones Rápidas</h3>
-				<button class="btn btn-success" onclick="fetchFromSOAP()" style="width: 100%; margin: 5px 0;">
-					🔄 Consultar API SOAP Ahora
-				</button>
-				<button class="btn" onclick="testConnection()" style="width: 100%; margin: 5px 0;">
-					🔍 Probar Conexión
-				</button>
-				<button class="btn" onclick="viewRawXML()" style="width: 100%; margin: 5px 0;">
+			<button class="btn btn-success" onclick="fetchFromSOAP(event)" style="width: 100%; margin: 5px 0;">
+				🔄 Consultar API SOAP Ahora
+			</button>
+			<button class="btn" onclick="testConnection(event)" style="width: 100%; margin: 5px 0;">
+				🔍 Probar Conexión
+			</button>
+			<button class="btn" onclick="viewRawXML(event)" style="width: 100%; margin: 5px 0;">
 					📄 Ver XML Completo
 				</button>
 			</div>
@@ -64,17 +64,17 @@ import Layout from '../layouts/Layout.astro';
 	</div>
 </Layout>
 
-<script>
+<script is:inline>
 const API_BASE = 'http://localhost:3001/api';
 let queryHistory = [];
 
 // Verificar estado de la API SOAP
 async function checkSOAPStatus() {
 	try {
-		const response = await fetch(`${API_BASE}/../health`);
+		const response = await fetch(`${API_BASE}/test/soap-connection`);
 		const data = await response.json();
 		
-		document.getElementById('soap-api-status').innerHTML = data.soapApi ? 
+		document.getElementById('soap-api-status').innerHTML = data.success ? 
 			`<span class="status-indicator status-success"></span>Disponible` :
 			`<span class="status-indicator status-error"></span>Error`;
 	} catch (error) {
@@ -84,9 +84,9 @@ async function checkSOAPStatus() {
 }
 
 // Consultar directamente la API SOAP
-async function fetchFromSOAP() {
+async function fetchFromSOAP(event) {
 	try {
-		const button = event.target;
+		const button = event ? event.target : document.querySelector('button[onclick="fetchFromSOAP(event)"]');
 		button.disabled = true;
 		button.innerHTML = '🔄 Consultando...';
 		
@@ -101,8 +101,11 @@ async function fetchFromSOAP() {
 		`;
 
 		// Hacer la consulta
-		const response = await fetch(`${API_BASE}/actualizar`, {
-			method: 'POST'
+		const response = await fetch(`${API_BASE}/actualizar-soap`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
 		});
 		const data = await response.json();
 		
@@ -115,7 +118,7 @@ async function fetchFromSOAP() {
 			duration: `${duration}ms`,
 			success: data.success,
 			message: data.message || 'Consulta exitosa',
-			recordCount: data.data ? data.data.length : 0
+			recordCount: data.data ? (data.data.totalRegistros || 0) : 0
 		};
 		queryHistory.unshift(logEntry);
 		updateQueryLog();
@@ -150,7 +153,7 @@ async function fetchFromSOAP() {
 		});
 		updateQueryLog();
 	} finally {
-		const button = event.target;
+		const button = event ? event.target : document.querySelector('button[onclick="fetchFromSOAP(event)"]');
 		button.disabled = false;
 		button.innerHTML = '🔄 Consultar API SOAP Ahora';
 	}
@@ -162,46 +165,115 @@ function displaySOAPResults(data) {
 		<div style="margin-bottom: 20px;">
 			<h4>✅ Consulta SOAP Exitosa</h4>
 			<div class="metric">
-				<span>Registros obtenidos:</span>
-				<span class="metric-value">${data.data ? data.data.length : 0}</span>
+				<span>Registros procesados:</span>
+				<span class="metric-value">${data.data?.totalRegistros || 0}</span>
 			</div>
 			<div class="metric">
 				<span>Fecha de consulta:</span>
-				<span class="metric-value">${new Date().toLocaleString()}</span>
+				<span class="metric-value">${new Date(data.timestamp || new Date()).toLocaleString()}</span>
+			</div>
+			<div class="metric">
+				<span>Tiempo de respuesta:</span>
+				<span class="metric-value">${data.data?.tiempoRespuesta || 'N/A'}ms</span>
 			</div>
 		</div>
 	`;
 
-	if (data.data && data.data.length > 0) {
+	// Mostrar datos de cambio del dólar
+	if (data.data?.data?.cambioDolar && data.data.data.cambioDolar.length > 0) {
 		html += `
+			<h4>💰 Cambio del Dólar (Referencia)</h4>
 			<table class="table">
 				<thead>
 					<tr>
-						<th>Moneda</th>
-						<th>Código</th>
-						<th>Tipo Compra</th>
-						<th>Tipo Venta</th>
-						<th>Tipo Referencia</th>
+						<th>Fecha</th>
+						<th>Referencia (GTQ)</th>
 					</tr>
 				</thead>
 				<tbody>
 		`;
 
-		data.data.forEach(item => {
+		data.data.data.cambioDolar.forEach(dolar => {
 			html += `
 				<tr>
-					<td>${item.descripcion || 'N/A'}</td>
-					<td>${item.codigo_moneda || 'N/A'}</td>
-					<td>${item.tipo_compra || 'N/A'}</td>
-					<td>${item.tipo_venta || 'N/A'}</td>
-					<td><strong>${item.tipo_referencia || 'N/A'}</strong></td>
+					<td>${dolar.fecha || 'N/A'}</td>
+					<td><strong>Q ${dolar.referencia || 'N/A'}</strong></td>
 				</tr>
 			`;
 		});
 
+		html += `</tbody></table>`;
+	}
+
+	// Mostrar tipos de cambio si hay
+	if (data.data?.data?.tiposCambio && data.data.data.tiposCambio.length > 0) {
 		html += `
-				</tbody>
-			</table>
+			<h4>💱 Tipos de Cambio</h4>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Moneda</th>
+						<th>Fecha</th>
+						<th>Compra</th>
+						<th>Venta</th>
+						<th>Referencia</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+
+		data.data.data.tiposCambio.forEach(tipo => {
+			html += `
+				<tr>
+					<td>Moneda ${tipo.moneda}</td>
+					<td>${tipo.fecha || 'N/A'}</td>
+					<td>${tipo.compra || 'N/A'}</td>
+					<td>${tipo.venta || 'N/A'}</td>
+					<td><strong>${tipo.referencia || 'N/A'}</strong></td>
+				</tr>
+			`;
+		});
+
+		html += `</tbody></table>`;
+	}
+
+	// Mostrar monedas si hay
+	if (data.data?.data?.monedas && data.data.data.monedas.length > 0) {
+		html += `
+			<h4>🏦 Catálogo de Monedas</h4>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Código</th>
+						<th>Descripción</th>
+						<th>Símbolo</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+
+		data.data.data.monedas.forEach(moneda => {
+			html += `
+				<tr>
+					<td>${moneda.codigo}</td>
+					<td>${moneda.descripcion}</td>
+					<td>${moneda.simbolo || 'N/A'}</td>
+				</tr>
+			`;
+		});
+
+		html += `</tbody></table>`;
+	}
+
+	// Si no hay datos específicos, mostrar información general
+	if (!data.data?.data?.cambioDolar?.length && !data.data?.data?.tiposCambio?.length && !data.data?.data?.monedas?.length) {
+		html += `
+			<div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+				<h4>📊 Datos Procesados</h4>
+				<p>La consulta SOAP se ejecutó correctamente. Los datos se guardaron en la base de datos.</p>
+				<p>Total de elementos procesados: <strong>${data.data?.totalRegistros || 0}</strong></p>
+				<p><a href="/api-soap" onclick="window.location.reload(); return false;">🔄 Actualizar página</a> para ver más detalles.</p>
+			</div>
 		`;
 	}
 
@@ -209,16 +281,16 @@ function displaySOAPResults(data) {
 }
 
 // Probar conexión con la API
-async function testConnection() {
+async function testConnection(event) {
 	try {
-		const button = event.target;
+		const button = event ? event.target : document.querySelector('button[onclick="testConnection(event)"]');
 		button.disabled = true;
 		button.innerHTML = '🔍 Probando...';
 		
-		const response = await fetch(`${API_BASE}/../health`);
+		const response = await fetch(`${API_BASE}/test/soap-connection`);
 		const data = await response.json();
 		
-		if (response.ok && data.soapApi) {
+		if (response.ok && data.success) {
 			alert('✅ Conexión exitosa con la API SOAP del Banco de Guatemala');
 		} else {
 			alert('⚠️ Problemas con la conexión a la API SOAP');
@@ -226,55 +298,47 @@ async function testConnection() {
 	} catch (error) {
 		alert('❌ Error probando conexión');
 	} finally {
-		const button = event.target;
+		const button = event ? event.target : document.querySelector('button[onclick="testConnection(event)"]');
 		button.disabled = false;
 		button.innerHTML = '🔍 Probar Conexión';
 	}
 }
 
 // Ver XML completo de respuesta
-async function viewRawXML() {
+async function viewRawXML(event) {
 	try {
+		const button = event ? event.target : document.querySelector('button[onclick="viewRawXML(event)"]');
 		const xmlViewer = document.getElementById('xml-viewer');
 		const xmlContent = document.getElementById('xml-content');
 		
 		if (xmlViewer.style.display === 'none') {
-			// Simular una consulta para obtener XML
-			xmlContent.textContent = `
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <TipoCambioDiaResponse xmlns="http://www.banguat.gob.gt/variables/ws/">
-      <TipoCambioDiaResult>
-        <Variables>
-          <Variable>
-            <Moneda>1</Moneda>
-            <Descripcion>Quetzal Guatemalteco</Descripcion>
-          </Variable>
-          <Variable>
-            <Moneda>2</Moneda>
-            <Descripcion>Dólar Estadounidense</Descripcion>
-          </Variable>
-        </Variables>
-        <CambioDia>
-          <VarDolar>
-            <Fecha>18/11/2025</Fecha>
-            <Referencia>7.75</Referencia>
-          </VarDolar>
-        </CambioDia>
-      </TipoCambioDiaResult>
-    </TipoCambioDiaResponse>
-  </soap:Body>
-</soap:Envelope>`;
+			button.disabled = true;
+			button.innerHTML = '📄 Cargando...';
+			
+			// Obtener XML real del backend
+			try {
+				const response = await fetch(`${API_BASE}/debug/xml-crudo`);
+				const data = await response.json();
+				
+				if (data.success && data.data.xmlResponse) {
+					xmlContent.textContent = data.data.xmlResponse;
+				} else {
+					xmlContent.textContent = `Error obteniendo XML: ${data.message || 'Error desconocido'}`;
+				}
+			} catch (error) {
+				xmlContent.textContent = `Error de conexión: ${error.message}`;
+			}
 			
 			xmlViewer.style.display = 'block';
-			event.target.innerHTML = '🙈 Ocultar XML';
+			button.innerHTML = '🙈 Ocultar XML';
 		} else {
 			xmlViewer.style.display = 'none';
-			event.target.innerHTML = '📄 Ver XML Completo';
+			button.innerHTML = '📄 Ver XML Completo';
 		}
 	} catch (error) {
 		alert('❌ Error mostrando XML');
+	} finally {
+		button.disabled = false;
 	}
 }
 
@@ -324,6 +388,11 @@ function updateQueryLog() {
 document.addEventListener('DOMContentLoaded', () => {
 	checkSOAPStatus();
 });
+
+// Hacer las funciones disponibles globalmente
+window.fetchFromSOAP = fetchFromSOAP;
+window.testConnection = testConnection;
+window.viewRawXML = viewRawXML;
 </script>
 
 <style>
