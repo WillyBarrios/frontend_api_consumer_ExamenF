@@ -1,0 +1,499 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Base de Datos">
+	<div class="db-section">
+		<h2>🗄️ Gestión de Base de Datos</h2>
+		<p>Consulta y administra los datos almacenados en la base de datos MariaDB del sistema.</p>
+		
+		<div class="dashboard-grid">
+			<div class="card">
+				<h3>🔗 Estado de Conexión</h3>
+				<div class="metric">
+					<span>Base de Datos</span>
+					<span class="metric-value" id="db-connection-status">
+						<span class="status-indicator status-warning"></span>Verificando...
+					</span>
+				</div>
+				<div class="metric">
+					<span>Servidor</span>
+					<span class="metric-value">MariaDB 12.0</span>
+				</div>
+				<div class="metric">
+					<span>Puerto</span>
+					<span class="metric-value">3306</span>
+				</div>
+			</div>
+
+			<div class="card">
+				<h3>📊 Estadísticas Generales</h3>
+				<div id="db-stats">
+					<div class="loading">
+						<div class="spinner"></div>
+						Cargando estadísticas...
+					</div>
+				</div>
+			</div>
+
+			<div class="card">
+				<h3>⚡ Acciones de BD</h3>
+				<button class="btn btn-success" onclick="refreshData()" style="width: 100%; margin: 5px 0;">
+					🔄 Actualizar Datos
+				</button>
+				<button class="btn" onclick="viewTables()" style="width: 100%; margin: 5px 0;">
+					📋 Ver Tablas
+				</button>
+				<button class="btn" onclick="exportData()" style="width: 100%; margin: 5px 0;">
+					💾 Exportar Datos
+				</button>
+			</div>
+
+			<div class="card">
+				<h3>📈 Últimas Actualizaciones</h3>
+				<div id="recent-updates">
+					<div class="loading">
+						<div class="spinner"></div>
+						Cargando actualizaciones...
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sección de Tablas -->
+		<div class="chart-container">
+			<h3>💰 Tipos de Cambio Históricos</h3>
+			<div class="filter-controls" style="margin-bottom: 20px;">
+				<select id="currency-filter" class="btn">
+					<option value="">Todas las monedas</option>
+				</select>
+				<input type="date" id="date-from" class="btn" style="margin: 0 10px;">
+				<input type="date" id="date-to" class="btn">
+				<button class="btn" onclick="applyFilter()">🔍 Filtrar</button>
+				<button class="btn" onclick="clearFilter()">🗑️ Limpiar</button>
+			</div>
+			<div id="exchange-history">
+				<div class="loading">
+					<div class="spinner"></div>
+					Cargando histórico de tipos de cambio...
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>🏦 Catálogo de Monedas</h3>
+			<div id="currency-catalog">
+				<div class="loading">
+					<div class="spinner"></div>
+					Cargando catálogo de monedas...
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>📝 Log de Consultas API</h3>
+			<div id="api-log">
+				<div class="loading">
+					<div class="spinner"></div>
+					Cargando log de consultas...
+				</div>
+			</div>
+		</div>
+
+		<!-- Modal para detalles de tabla -->
+		<div id="table-modal" class="modal" style="display: none;">
+			<div class="modal-content">
+				<span class="close" onclick="closeModal()">&times;</span>
+				<h3 id="modal-title">Detalles de Tabla</h3>
+				<div id="modal-body"></div>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script>
+const API_BASE = 'http://localhost:3001/api';
+
+// Verificar estado de la conexión a BD
+async function checkDBConnection() {
+	try {
+		const response = await fetch(`${API_BASE}/../health`);
+		const data = await response.json();
+		
+		document.getElementById('db-connection-status').innerHTML = data.database ? 
+			`<span class="status-indicator status-success"></span>Conectada` :
+			`<span class="status-indicator status-error"></span>Desconectada`;
+	} catch (error) {
+		document.getElementById('db-connection-status').innerHTML = 
+			`<span class="status-indicator status-error"></span>Error`;
+	}
+}
+
+// Cargar estadísticas de la BD
+async function loadDBStats() {
+	try {
+		const response = await fetch(`${API_BASE}/estadisticas`);
+		const data = await response.json();
+		
+		if (data.success) {
+			const stats = data.data;
+			document.getElementById('db-stats').innerHTML = `
+				<div class="metric">
+					<span>Total Monedas</span>
+					<span class="metric-value">${stats.totalMonedas || 0}</span>
+				</div>
+				<div class="metric">
+					<span>Registros Históricos</span>
+					<span class="metric-value">${stats.totalRegistros || 0}</span>
+				</div>
+				<div class="metric">
+					<span>Consultas API</span>
+					<span class="metric-value">${stats.totalConsultasApi || 0}</span>
+				</div>
+			`;
+		} else {
+			document.getElementById('db-stats').innerHTML = 
+				'<p style="color: #dc3545;">Error cargando estadísticas</p>';
+		}
+	} catch (error) {
+		document.getElementById('db-stats').innerHTML = 
+			'<p style="color: #dc3545;">Error de conexión</p>';
+	}
+}
+
+// Cargar últimas actualizaciones
+async function loadRecentUpdates() {
+	try {
+		const response = await fetch(`${API_BASE}/tipos-cambio?limit=5`);
+		const data = await response.json();
+		
+		if (data.success && data.data.length > 0) {
+			let html = '';
+			data.data.slice(0, 5).forEach(item => {
+				html += `
+					<div class="metric">
+						<span>${item.moneda_descripcion}</span>
+						<span class="metric-value">${item.fecha}</span>
+					</div>
+				`;
+			});
+			document.getElementById('recent-updates').innerHTML = html;
+		} else {
+			document.getElementById('recent-updates').innerHTML = 
+				'<p style="color: #666;">No hay actualizaciones recientes</p>';
+		}
+	} catch (error) {
+		document.getElementById('recent-updates').innerHTML = 
+			'<p style="color: #dc3545;">Error cargando actualizaciones</p>';
+	}
+}
+
+// Cargar histórico de tipos de cambio
+async function loadExchangeHistory(filters = {}) {
+	try {
+		let url = `${API_BASE}/tipos-cambio?`;
+		if (filters.currency) url += `moneda=${filters.currency}&`;
+		if (filters.dateFrom) url += `fechaDesde=${filters.dateFrom}&`;
+		if (filters.dateTo) url += `fechaHasta=${filters.dateTo}&`;
+		
+		const response = await fetch(url);
+		const data = await response.json();
+		
+		if (data.success && data.data.length > 0) {
+			let html = `
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Fecha</th>
+							<th>Moneda</th>
+							<th>Símbolo</th>
+							<th>Tipo Compra</th>
+							<th>Tipo Venta</th>
+							<th>Tipo Referencia</th>
+							<th>Última Consulta</th>
+						</tr>
+					</thead>
+					<tbody>
+			`;
+			
+			data.data.forEach(item => {
+				html += `
+					<tr>
+						<td>${item.fecha}</td>
+						<td>${item.moneda_descripcion}</td>
+						<td>${item.simbolo}</td>
+						<td>${item.tipo_compra || 'N/A'}</td>
+						<td>${item.tipo_venta || 'N/A'}</td>
+						<td><strong>${item.tipo_referencia || 'N/A'}</strong></td>
+						<td>${new Date(item.fecha_consulta).toLocaleString()}</td>
+					</tr>
+				`;
+			});
+			
+			html += '</tbody></table>';
+			document.getElementById('exchange-history').innerHTML = html;
+		} else {
+			document.getElementById('exchange-history').innerHTML = 
+				'<p style="text-align: center; color: #666;">No se encontraron datos con los filtros aplicados</p>';
+		}
+	} catch (error) {
+		document.getElementById('exchange-history').innerHTML = 
+			'<p style="color: #dc3545;">Error cargando histórico</p>';
+	}
+}
+
+// Cargar catálogo de monedas
+async function loadCurrencyCatalog() {
+	try {
+		const response = await fetch(`${API_BASE}/monedas`);
+		const data = await response.json();
+		
+		if (data.success && data.data.length > 0) {
+			// Llenar el filtro de monedas
+			const currencyFilter = document.getElementById('currency-filter');
+			data.data.forEach(currency => {
+				const option = document.createElement('option');
+				option.value = currency.codigo_moneda;
+				option.textContent = `${currency.descripcion} (${currency.simbolo})`;
+				currencyFilter.appendChild(option);
+			});
+			
+			// Mostrar tabla de monedas
+			let html = `
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Código</th>
+							<th>Descripción</th>
+							<th>Símbolo</th>
+							<th>Estado</th>
+							<th>Fecha Creación</th>
+						</tr>
+					</thead>
+					<tbody>
+			`;
+			
+			data.data.forEach(currency => {
+				html += `
+					<tr>
+						<td>${currency.codigo_moneda}</td>
+						<td>${currency.descripcion}</td>
+						<td>${currency.simbolo}</td>
+						<td>
+							<span class="status-indicator ${currency.activa ? 'status-success' : 'status-error'}"></span>
+							${currency.activa ? 'Activa' : 'Inactiva'}
+						</td>
+						<td>${new Date(currency.fecha_creacion).toLocaleDateString()}</td>
+					</tr>
+				`;
+			});
+			
+			html += '</tbody></table>';
+			document.getElementById('currency-catalog').innerHTML = html;
+		} else {
+			document.getElementById('currency-catalog').innerHTML = 
+				'<p style="text-align: center; color: #666;">No hay monedas registradas</p>';
+		}
+	} catch (error) {
+		document.getElementById('currency-catalog').innerHTML = 
+			'<p style="color: #dc3545;">Error cargando catálogo</p>';
+	}
+}
+
+// Cargar log de consultas API (simulado)
+async function loadAPILog() {
+	try {
+		// Por ahora simulamos el log, pero podrías implementar un endpoint real
+		const logData = [
+			{ timestamp: new Date().toLocaleString(), endpoint: '/api/actualizar', method: 'POST', status: 200, duration: '1.2s', records: 10 },
+			{ timestamp: new Date(Date.now() - 300000).toLocaleString(), endpoint: '/api/tipos-cambio', method: 'GET', status: 200, duration: '0.8s', records: 15 },
+			{ timestamp: new Date(Date.now() - 600000).toLocaleString(), endpoint: '/api/monedas', method: 'GET', status: 200, duration: '0.5s', records: 10 }
+		];
+		
+		let html = `
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Timestamp</th>
+						<th>Endpoint</th>
+						<th>Método</th>
+						<th>Estado</th>
+						<th>Duración</th>
+						<th>Registros</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+		
+		logData.forEach(entry => {
+			html += `
+				<tr>
+					<td>${entry.timestamp}</td>
+					<td>${entry.endpoint}</td>
+					<td><span class="btn" style="padding: 2px 8px; font-size: 0.8rem;">${entry.method}</span></td>
+					<td>
+						<span class="status-indicator status-success"></span>
+						${entry.status}
+					</td>
+					<td>${entry.duration}</td>
+					<td>${entry.records}</td>
+				</tr>
+			`;
+		});
+		
+		html += '</tbody></table>';
+		document.getElementById('api-log').innerHTML = html;
+	} catch (error) {
+		document.getElementById('api-log').innerHTML = 
+			'<p style="color: #dc3545;">Error cargando log</p>';
+	}
+}
+
+// Aplicar filtros
+function applyFilter() {
+	const currency = document.getElementById('currency-filter').value;
+	const dateFrom = document.getElementById('date-from').value;
+	const dateTo = document.getElementById('date-to').value;
+	
+	const filters = {};
+	if (currency) filters.currency = currency;
+	if (dateFrom) filters.dateFrom = dateFrom;
+	if (dateTo) filters.dateTo = dateTo;
+	
+	loadExchangeHistory(filters);
+}
+
+// Limpiar filtros
+function clearFilter() {
+	document.getElementById('currency-filter').value = '';
+	document.getElementById('date-from').value = '';
+	document.getElementById('date-to').value = '';
+	loadExchangeHistory();
+}
+
+// Refrescar datos
+async function refreshData() {
+	const button = event.target;
+	button.disabled = true;
+	button.innerHTML = '🔄 Actualizando...';
+	
+	await Promise.all([
+		checkDBConnection(),
+		loadDBStats(),
+		loadRecentUpdates(),
+		loadExchangeHistory(),
+		loadCurrencyCatalog(),
+		loadAPILog()
+	]);
+	
+	button.disabled = false;
+	button.innerHTML = '🔄 Actualizar Datos';
+	
+	alert('✅ Datos actualizados correctamente');
+}
+
+// Ver información de tablas
+function viewTables() {
+	const tables = [
+		{ name: 'monedas', description: 'Catálogo de monedas disponibles', records: '10' },
+		{ name: 'tipos_cambio_historico', description: 'Histórico de tipos de cambio', records: '0' },
+		{ name: 'cambio_dolar_referencia', description: 'Referencias del dólar USD', records: '0' },
+		{ name: 'log_consultas_api', description: 'Log de consultas a la API', records: '0' }
+	];
+	
+	let html = '<h4>📋 Estructura de Tablas en la Base de Datos</h4>';
+	html += '<table class="table"><thead><tr><th>Tabla</th><th>Descripción</th><th>Registros</th></tr></thead><tbody>';
+	
+	tables.forEach(table => {
+		html += `
+			<tr>
+				<td><strong>${table.name}</strong></td>
+				<td>${table.description}</td>
+				<td>${table.records}</td>
+			</tr>
+		`;
+	});
+	
+	html += '</tbody></table>';
+	
+	document.getElementById('modal-title').innerHTML = '📊 Información de Tablas';
+	document.getElementById('modal-body').innerHTML = html;
+	document.getElementById('table-modal').style.display = 'block';
+}
+
+// Exportar datos (simulado)
+function exportData() {
+	alert('🚧 Funcionalidad de exportación en desarrollo.\n\nPróximamente podrás exportar:\n• Tipos de cambio históricos\n• Catálogo de monedas\n• Log de consultas\n\nFormatos: CSV, Excel, JSON');
+}
+
+// Cerrar modal
+function closeModal() {
+	document.getElementById('table-modal').style.display = 'none';
+}
+
+// Inicializar cuando carga la página
+document.addEventListener('DOMContentLoaded', () => {
+	refreshData();
+});
+</script>
+
+<style>
+.db-section h2 {
+	color: #1e3c72;
+	margin-bottom: 10px;
+}
+
+.db-section p {
+	color: #666;
+	margin-bottom: 30px;
+	font-size: 1.1rem;
+}
+
+.filter-controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.filter-controls input,
+.filter-controls select {
+	padding: 8px 12px;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+}
+
+.modal {
+	position: fixed;
+	z-index: 1000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+	background-color: white;
+	margin: 10% auto;
+	padding: 20px;
+	border-radius: 12px;
+	width: 80%;
+	max-width: 800px;
+	position: relative;
+}
+
+.close {
+	position: absolute;
+	right: 20px;
+	top: 15px;
+	font-size: 24px;
+	font-weight: bold;
+	cursor: pointer;
+	color: #666;
+}
+
+.close:hover {
+	color: #333;
+}
+</style>

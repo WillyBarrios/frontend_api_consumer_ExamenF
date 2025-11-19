@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "consumo-api-frontend",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "Frontend Astro para consumo de API",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -10,5 +11,7 @@
   },
   "dependencies": {
     "astro": "^5.15.9"
-  }
+  },
+  "author": "WillyBarrios",
+  "license": "MIT"
 }

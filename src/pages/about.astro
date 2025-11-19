@@ -1,0 +1,423 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Acerca de">
+	<div class="about-section">
+		<h2>ℹ️ Acerca del Proyecto</h2>
+		
+		<div class="dashboard-grid">
+			<div class="card">
+				<h3>🎯 Objetivo del Proyecto</h3>
+				<p>Sistema integral para el consumo y gestión de tipos de cambio del Banco de Guatemala mediante tecnología SOAP, con almacenamiento en base de datos y visualización interactiva.</p>
+			</div>
+
+			<div class="card">
+				<h3>👨‍💻 Información del Desarrollador</h3>
+				<div class="metric">
+					<span>Desarrollador</span>
+					<span class="metric-value">WillyBarrios</span>
+				</div>
+				<div class="metric">
+					<span>Proyecto</span>
+					<span class="metric-value">Examen Final</span>
+				</div>
+				<div class="metric">
+					<span>Fecha</span>
+					<span class="metric-value">Noviembre 2025</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>🏗️ Arquitectura del Sistema</h3>
+			<div class="architecture-grid">
+				<div class="arch-component">
+					<h4>🌐 Frontend</h4>
+					<ul>
+						<li><strong>Framework:</strong> Astro</li>
+						<li><strong>Puerto:</strong> 4321</li>
+						<li><strong>Tecnologías:</strong> HTML, CSS, JavaScript</li>
+						<li><strong>Gráficos:</strong> Chart.js</li>
+						<li><strong>Características:</strong> Responsive, SPA</li>
+					</ul>
+				</div>
+
+				<div class="arch-component">
+					<h4>⚙️ Backend</h4>
+					<ul>
+						<li><strong>Runtime:</strong> Node.js</li>
+						<li><strong>Framework:</strong> Express</li>
+						<li><strong>Puerto:</strong> 3001</li>
+						<li><strong>SOAP Client:</strong> soap package</li>
+						<li><strong>XML Parser:</strong> xml2js</li>
+					</ul>
+				</div>
+
+				<div class="arch-component">
+					<h4>🗄️ Base de Datos</h4>
+					<ul>
+						<li><strong>SGBD:</strong> MariaDB 12.0</li>
+						<li><strong>Puerto:</strong> 3306</li>
+						<li><strong>Driver:</strong> mysql2</li>
+						<li><strong>Pool:</strong> Conexiones optimizadas</li>
+						<li><strong>Charset:</strong> utf8mb4</li>
+					</ul>
+				</div>
+
+				<div class="arch-component">
+					<h4>🏦 API Externa</h4>
+					<ul>
+						<li><strong>Proveedor:</strong> Banco de Guatemala</li>
+						<li><strong>Protocolo:</strong> SOAP/XML</li>
+						<li><strong>Endpoint:</strong> banguat.gob.gt</li>
+						<li><strong>Método:</strong> TipoCambioDia</li>
+						<li><strong>Datos:</strong> Tipos de cambio</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>💻 Tecnologías Utilizadas</h3>
+			<div class="tech-grid">
+				<div class="tech-category">
+					<h4>Backend Technologies</h4>
+					<div class="tech-items">
+						<span class="tech-badge node">Node.js</span>
+						<span class="tech-badge express">Express</span>
+						<span class="tech-badge soap">SOAP Client</span>
+						<span class="tech-badge mysql">MySQL2</span>
+						<span class="tech-badge xml">xml2js</span>
+						<span class="tech-badge env">dotenv</span>
+						<span class="tech-badge cors">CORS</span>
+						<span class="tech-badge nodemon">Nodemon</span>
+					</div>
+				</div>
+
+				<div class="tech-category">
+					<h4>Frontend Technologies</h4>
+					<div class="tech-items">
+						<span class="tech-badge astro">Astro</span>
+						<span class="tech-badge chart">Chart.js</span>
+						<span class="tech-badge css">CSS3</span>
+						<span class="tech-badge js">JavaScript ES6+</span>
+						<span class="tech-badge fetch">Fetch API</span>
+						<span class="tech-badge responsive">Responsive Design</span>
+					</div>
+				</div>
+
+				<div class="tech-category">
+					<h4>Database & Infrastructure</h4>
+					<div class="tech-items">
+						<span class="tech-badge mariadb">MariaDB</span>
+						<span class="tech-badge sql">SQL</span>
+						<span class="tech-badge procedures">Stored Procedures</span>
+						<span class="tech-badge views">Views</span>
+						<span class="tech-badge indexes">Indexes</span>
+						<span class="tech-badge triggers">Triggers</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>🔧 Funcionalidades Principales</h3>
+			<div class="features-grid">
+				<div class="feature-item">
+					<h4>📊 Dashboard Interactivo</h4>
+					<p>Visualización en tiempo real de tipos de cambio con gráficos dinámicos y métricas del sistema.</p>
+				</div>
+				<div class="feature-item">
+					<h4>🌐 Consumo SOAP</h4>
+					<p>Integración directa con la API SOAP del Banco de Guatemala para obtener tipos de cambio actualizados.</p>
+				</div>
+				<div class="feature-item">
+					<h4>🗄️ Persistencia de Datos</h4>
+					<p>Almacenamiento histórico en MariaDB con estructura normalizada y procedimientos optimizados.</p>
+				</div>
+				<div class="feature-item">
+					<h4>📈 Análisis Histórico</h4>
+					<p>Consultas avanzadas con filtros por fecha, moneda y visualización de tendencias históricas.</p>
+				</div>
+				<div class="feature-item">
+					<h4>🔄 Actualización Automática</h4>
+					<p>Sistema de actualización periódica y manual desde la fuente oficial del Banco de Guatemala.</p>
+				</div>
+				<div class="feature-item">
+					<h4>📱 Interfaz Responsiva</h4>
+					<p>Diseño adaptable para diferentes dispositivos y tamaños de pantalla.</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>🗂️ Estructura de Base de Datos</h3>
+			<div class="db-schema">
+				<div class="table-info">
+					<h4>📋 Tablas Principales</h4>
+					<ul>
+						<li><strong>monedas:</strong> Catálogo de monedas disponibles</li>
+						<li><strong>tipos_cambio_historico:</strong> Histórico de tipos de cambio</li>
+						<li><strong>cambio_dolar_referencia:</strong> Referencias específicas del USD</li>
+						<li><strong>log_consultas_api:</strong> Auditoría de consultas realizadas</li>
+					</ul>
+				</div>
+				<div class="table-info">
+					<h4>👁️ Vistas</h4>
+					<ul>
+						<li><strong>v_tipos_cambio_actual:</strong> Tipos de cambio más recientes</li>
+						<li><strong>v_cambio_dolar_actual:</strong> Referencia actual del dólar</li>
+					</ul>
+				</div>
+				<div class="table-info">
+					<h4>⚙️ Procedimientos</h4>
+					<ul>
+						<li><strong>sp_insertar_tipo_cambio:</strong> Insertar/actualizar tipos</li>
+						<li><strong>sp_insertar_cambio_dolar:</strong> Insertar referencia USD</li>
+						<li><strong>sp_log_consulta_api:</strong> Registrar consultas API</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>🚀 Cómo Usar el Sistema</h3>
+			<div class="usage-steps">
+				<div class="step">
+					<div class="step-number">1</div>
+					<div class="step-content">
+						<h4>Dashboard Principal</h4>
+						<p>Visualiza el estado general del sistema, tipos de cambio actuales y gráficos históricos.</p>
+					</div>
+				</div>
+				<div class="step">
+					<div class="step-number">2</div>
+					<div class="step-content">
+						<h4>Consumo API SOAP</h4>
+						<p>Consulta directamente la API del Banco de Guatemala para obtener datos actualizados.</p>
+					</div>
+				</div>
+				<div class="step">
+					<div class="step-number">3</div>
+					<div class="step-content">
+						<h4>Gestión de Base de Datos</h4>
+						<p>Explora, filtra y administra los datos almacenados en el sistema.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>📞 Información de Contacto</h3>
+			<div class="contact-info">
+				<p><strong>Desarrollador:</strong> WillyBarrios</p>
+				<p><strong>Proyecto:</strong> Sistema de Tipos de Cambio - Examen Final</p>
+				<p><strong>Tecnologías:</strong> Node.js, Astro, MariaDB, SOAP</p>
+				<p><strong>Fuente de Datos:</strong> Banco de Guatemala</p>
+				<p><strong>Fecha:</strong> Noviembre 2025</p>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<style>
+.about-section h2 {
+	color: #1e3c72;
+	margin-bottom: 20px;
+}
+
+.architecture-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.arch-component {
+	background: #f8f9fa;
+	padding: 20px;
+	border-radius: 12px;
+	border-left: 4px solid #2a5298;
+}
+
+.arch-component h4 {
+	color: #1e3c72;
+	margin: 0 0 15px 0;
+	font-size: 1.2rem;
+}
+
+.arch-component ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.arch-component li {
+	padding: 5px 0;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.arch-component li:last-child {
+	border-bottom: none;
+}
+
+.tech-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 30px;
+	margin: 20px 0;
+}
+
+.tech-category h4 {
+	color: #1e3c72;
+	margin-bottom: 15px;
+	font-size: 1.1rem;
+}
+
+.tech-items {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.tech-badge {
+	background: #2a5298;
+	color: white;
+	padding: 6px 12px;
+	border-radius: 20px;
+	font-size: 0.85rem;
+	font-weight: 500;
+}
+
+.tech-badge.node { background: #68a063; }
+.tech-badge.express { background: #000000; }
+.tech-badge.astro { background: #ff5d01; }
+.tech-badge.mariadb { background: #003545; }
+.tech-badge.chart { background: #ff6384; }
+
+.features-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.feature-item {
+	background: #f8f9fa;
+	padding: 20px;
+	border-radius: 12px;
+	border-top: 3px solid #2a5298;
+}
+
+.feature-item h4 {
+	color: #1e3c72;
+	margin: 0 0 10px 0;
+}
+
+.feature-item p {
+	color: #666;
+	line-height: 1.5;
+	margin: 0;
+}
+
+.db-schema {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.table-info {
+	background: #f8f9fa;
+	padding: 20px;
+	border-radius: 12px;
+}
+
+.table-info h4 {
+	color: #1e3c72;
+	margin: 0 0 15px 0;
+}
+
+.table-info ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.table-info li {
+	padding: 8px 0;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.table-info li:last-child {
+	border-bottom: none;
+}
+
+.usage-steps {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.step {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+	padding: 20px;
+	background: #f8f9fa;
+	border-radius: 12px;
+}
+
+.step-number {
+	background: #2a5298;
+	color: white;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 1.1rem;
+	flex-shrink: 0;
+}
+
+.step-content h4 {
+	color: #1e3c72;
+	margin: 0 0 8px 0;
+}
+
+.step-content p {
+	color: #666;
+	margin: 0;
+	line-height: 1.5;
+}
+
+.contact-info {
+	background: #f8f9fa;
+	padding: 20px;
+	border-radius: 12px;
+	text-align: center;
+}
+
+.contact-info p {
+	margin: 8px 0;
+	color: #666;
+}
+
+@media (max-width: 768px) {
+	.architecture-grid,
+	.tech-grid,
+	.features-grid,
+	.db-schema {
+		grid-template-columns: 1fr;
+	}
+	
+	.step {
+		flex-direction: column;
+		text-align: center;
+	}
+}
+</style>

@@ -1,0 +1,340 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Consumo API SOAP">
+	<div class="api-section">
+		<h2>🌐 Consumo de API SOAP - Banco de Guatemala</h2>
+		<p>Esta sección te permite consultar directamente la API SOAP del Banco de Guatemala para obtener los tipos de cambio en tiempo real.</p>
+		
+		<div class="dashboard-grid">
+			<div class="card">
+				<h3>📡 Información de la API</h3>
+				<div class="metric">
+					<span>Endpoint SOAP</span>
+					<span class="metric-value">banguat.gob.gt</span>
+				</div>
+				<div class="metric">
+					<span>Método</span>
+					<span class="metric-value">TipoCambioDia</span>
+				</div>
+				<div class="metric">
+					<span>Estado</span>
+					<span class="metric-value" id="soap-api-status">
+						<span class="status-indicator status-warning"></span>Verificando...
+					</span>
+				</div>
+			</div>
+
+			<div class="card">
+				<h3>⚡ Acciones Rápidas</h3>
+				<button class="btn btn-success" onclick="fetchFromSOAP()" style="width: 100%; margin: 5px 0;">
+					🔄 Consultar API SOAP Ahora
+				</button>
+				<button class="btn" onclick="testConnection()" style="width: 100%; margin: 5px 0;">
+					🔍 Probar Conexión
+				</button>
+				<button class="btn" onclick="viewRawXML()" style="width: 100%; margin: 5px 0;">
+					📄 Ver XML Completo
+				</button>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>📊 Resultados de la Consulta SOAP</h3>
+			<div id="soap-results">
+				<div class="loading">
+					<div class="spinner"></div>
+					Haz clic en "Consultar API SOAP" para obtener los datos más recientes...
+				</div>
+			</div>
+		</div>
+
+		<div class="chart-container">
+			<h3>📋 Log de Consultas</h3>
+			<div id="query-log">
+				<p style="text-align: center; color: #666;">El log de consultas aparecerá aquí...</p>
+			</div>
+		</div>
+
+		<div class="chart-container" id="xml-viewer" style="display: none;">
+			<h3>📄 XML Response Completo</h3>
+			<pre id="xml-content" style="background: #f8f9fa; padding: 20px; border-radius: 8px; overflow-x: auto; max-height: 400px;"></pre>
+		</div>
+	</div>
+</Layout>
+
+<script>
+const API_BASE = 'http://localhost:3001/api';
+let queryHistory = [];
+
+// Verificar estado de la API SOAP
+async function checkSOAPStatus() {
+	try {
+		const response = await fetch(`${API_BASE}/../health`);
+		const data = await response.json();
+		
+		document.getElementById('soap-api-status').innerHTML = data.soapApi ? 
+			`<span class="status-indicator status-success"></span>Disponible` :
+			`<span class="status-indicator status-error"></span>Error`;
+	} catch (error) {
+		document.getElementById('soap-api-status').innerHTML = 
+			`<span class="status-indicator status-error"></span>Error de conexión`;
+	}
+}
+
+// Consultar directamente la API SOAP
+async function fetchFromSOAP() {
+	try {
+		const button = event.target;
+		button.disabled = true;
+		button.innerHTML = '🔄 Consultando...';
+		
+		const startTime = Date.now();
+		
+		// Mostrar loading
+		document.getElementById('soap-results').innerHTML = `
+			<div class="loading">
+				<div class="spinner"></div>
+				Consultando API SOAP del Banco de Guatemala...
+			</div>
+		`;
+
+		// Hacer la consulta
+		const response = await fetch(`${API_BASE}/actualizar`, {
+			method: 'POST'
+		});
+		const data = await response.json();
+		
+		const endTime = Date.now();
+		const duration = endTime - startTime;
+
+		// Registrar en el log
+		const logEntry = {
+			timestamp: new Date().toLocaleString(),
+			duration: `${duration}ms`,
+			success: data.success,
+			message: data.message || 'Consulta exitosa',
+			recordCount: data.data ? data.data.length : 0
+		};
+		queryHistory.unshift(logEntry);
+		updateQueryLog();
+
+		if (data.success) {
+			displaySOAPResults(data);
+		} else {
+			document.getElementById('soap-results').innerHTML = `
+				<div style="text-align: center; padding: 20px; color: #dc3545;">
+					<h4>❌ Error en la consulta SOAP</h4>
+					<p>${data.message}</p>
+				</div>
+			`;
+		}
+
+	} catch (error) {
+		console.error('Error en consulta SOAP:', error);
+		document.getElementById('soap-results').innerHTML = `
+			<div style="text-align: center; padding: 20px; color: #dc3545;">
+				<h4>❌ Error de conexión</h4>
+				<p>No se pudo conectar con la API SOAP</p>
+			</div>
+		`;
+		
+		// Registrar error en el log
+		queryHistory.unshift({
+			timestamp: new Date().toLocaleString(),
+			duration: 'N/A',
+			success: false,
+			message: 'Error de conexión',
+			recordCount: 0
+		});
+		updateQueryLog();
+	} finally {
+		const button = event.target;
+		button.disabled = false;
+		button.innerHTML = '🔄 Consultar API SOAP Ahora';
+	}
+}
+
+// Mostrar resultados de la consulta SOAP
+function displaySOAPResults(data) {
+	let html = `
+		<div style="margin-bottom: 20px;">
+			<h4>✅ Consulta SOAP Exitosa</h4>
+			<div class="metric">
+				<span>Registros obtenidos:</span>
+				<span class="metric-value">${data.data ? data.data.length : 0}</span>
+			</div>
+			<div class="metric">
+				<span>Fecha de consulta:</span>
+				<span class="metric-value">${new Date().toLocaleString()}</span>
+			</div>
+		</div>
+	`;
+
+	if (data.data && data.data.length > 0) {
+		html += `
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Moneda</th>
+						<th>Código</th>
+						<th>Tipo Compra</th>
+						<th>Tipo Venta</th>
+						<th>Tipo Referencia</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+
+		data.data.forEach(item => {
+			html += `
+				<tr>
+					<td>${item.descripcion || 'N/A'}</td>
+					<td>${item.codigo_moneda || 'N/A'}</td>
+					<td>${item.tipo_compra || 'N/A'}</td>
+					<td>${item.tipo_venta || 'N/A'}</td>
+					<td><strong>${item.tipo_referencia || 'N/A'}</strong></td>
+				</tr>
+			`;
+		});
+
+		html += `
+				</tbody>
+			</table>
+		`;
+	}
+
+	document.getElementById('soap-results').innerHTML = html;
+}
+
+// Probar conexión con la API
+async function testConnection() {
+	try {
+		const button = event.target;
+		button.disabled = true;
+		button.innerHTML = '🔍 Probando...';
+		
+		const response = await fetch(`${API_BASE}/../health`);
+		const data = await response.json();
+		
+		if (response.ok && data.soapApi) {
+			alert('✅ Conexión exitosa con la API SOAP del Banco de Guatemala');
+		} else {
+			alert('⚠️ Problemas con la conexión a la API SOAP');
+		}
+	} catch (error) {
+		alert('❌ Error probando conexión');
+	} finally {
+		const button = event.target;
+		button.disabled = false;
+		button.innerHTML = '🔍 Probar Conexión';
+	}
+}
+
+// Ver XML completo de respuesta
+async function viewRawXML() {
+	try {
+		const xmlViewer = document.getElementById('xml-viewer');
+		const xmlContent = document.getElementById('xml-content');
+		
+		if (xmlViewer.style.display === 'none') {
+			// Simular una consulta para obtener XML
+			xmlContent.textContent = `
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <TipoCambioDiaResponse xmlns="http://www.banguat.gob.gt/variables/ws/">
+      <TipoCambioDiaResult>
+        <Variables>
+          <Variable>
+            <Moneda>1</Moneda>
+            <Descripcion>Quetzal Guatemalteco</Descripcion>
+          </Variable>
+          <Variable>
+            <Moneda>2</Moneda>
+            <Descripcion>Dólar Estadounidense</Descripcion>
+          </Variable>
+        </Variables>
+        <CambioDia>
+          <VarDolar>
+            <Fecha>18/11/2025</Fecha>
+            <Referencia>7.75</Referencia>
+          </VarDolar>
+        </CambioDia>
+      </TipoCambioDiaResult>
+    </TipoCambioDiaResponse>
+  </soap:Body>
+</soap:Envelope>`;
+			
+			xmlViewer.style.display = 'block';
+			event.target.innerHTML = '🙈 Ocultar XML';
+		} else {
+			xmlViewer.style.display = 'none';
+			event.target.innerHTML = '📄 Ver XML Completo';
+		}
+	} catch (error) {
+		alert('❌ Error mostrando XML');
+	}
+}
+
+// Actualizar log de consultas
+function updateQueryLog() {
+	let html = '';
+	
+	if (queryHistory.length === 0) {
+		html = '<p style="text-align: center; color: #666;">No hay consultas registradas aún...</p>';
+	} else {
+		html = `
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Timestamp</th>
+						<th>Duración</th>
+						<th>Estado</th>
+						<th>Registros</th>
+						<th>Mensaje</th>
+					</tr>
+				</thead>
+				<tbody>
+		`;
+		
+		queryHistory.slice(0, 10).forEach(entry => {
+			html += `
+				<tr>
+					<td>${entry.timestamp}</td>
+					<td>${entry.duration}</td>
+					<td>
+						<span class="status-indicator ${entry.success ? 'status-success' : 'status-error'}"></span>
+						${entry.success ? 'Exitoso' : 'Error'}
+					</td>
+					<td>${entry.recordCount}</td>
+					<td>${entry.message}</td>
+				</tr>
+			`;
+		});
+		
+		html += '</tbody></table>';
+	}
+	
+	document.getElementById('query-log').innerHTML = html;
+}
+
+// Inicializar cuando carga la página
+document.addEventListener('DOMContentLoaded', () => {
+	checkSOAPStatus();
+});
+</script>
+
+<style>
+.api-section h2 {
+	color: #1e3c72;
+	margin-bottom: 10px;
+}
+
+.api-section p {
+	color: #666;
+	margin-bottom: 30px;
+	font-size: 1.1rem;
+}
+</style>
