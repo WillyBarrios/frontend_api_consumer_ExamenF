@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="Consumo API SOAP">
 	<div class="api-section">
-		<h2>🌐 Consumo de API SOAP - Banco de Guatemala</h2>
+		<h2>Consumo de API SOAP - Banco de Guatemala</h2>
 		<p>Esta sección te permite consultar directamente la API SOAP del Banco de Guatemala para obtener los tipos de cambio en tiempo real.</p>
 		
 		<div class="dashboard-grid">
@@ -27,21 +27,21 @@ import Layout from '../layouts/Layout.astro';
 			</div>
 
 			<div class="card">
-				<h3>⚡ Acciones Rápidas</h3>
+				<h3> Acciones Rápidas</h3>
 			<button class="btn btn-success" onclick="fetchFromSOAP(event)" style="width: 100%; margin: 5px 0;">
-				🔄 Consultar API SOAP Ahora
+				 Consultar API SOAP Ahora
 			</button>
 			<button class="btn" onclick="testConnection(event)" style="width: 100%; margin: 5px 0;">
-				🔍 Probar Conexión
+				 Probar Conexión
 			</button>
 			<button class="btn" onclick="viewRawXML(event)" style="width: 100%; margin: 5px 0;">
-					📄 Ver XML Completo
+					 Ver XML Completo
 				</button>
 			</div>
 		</div>
 
 		<div class="chart-container">
-			<h3>📊 Resultados de la Consulta SOAP</h3>
+			<h3> Resultados de la Consulta SOAP</h3>
 			<div id="soap-results">
 				<div class="loading">
 					<div class="spinner"></div>
@@ -51,14 +51,14 @@ import Layout from '../layouts/Layout.astro';
 		</div>
 
 		<div class="chart-container">
-			<h3>📋 Log de Consultas</h3>
+			<h3>Log de Consultas</h3>
 			<div id="query-log">
 				<p style="text-align: center; color: #666;">El log de consultas aparecerá aquí...</p>
 			</div>
 		</div>
 
 		<div class="chart-container" id="xml-viewer" style="display: none;">
-			<h3>📄 XML Response Completo</h3>
+			<h3>XML Response Completo</h3>
 			<pre id="xml-content" style="background: #f8f9fa; padding: 20px; border-radius: 8px; overflow-x: auto; max-height: 400px;"></pre>
 		</div>
 	</div>
@@ -128,7 +128,7 @@ async function fetchFromSOAP(event) {
 		} else {
 			document.getElementById('soap-results').innerHTML = `
 				<div style="text-align: center; padding: 20px; color: #dc3545;">
-					<h4>❌ Error en la consulta SOAP</h4>
+					<h4> Error en la consulta SOAP</h4>
 					<p>${data.message}</p>
 				</div>
 			`;
@@ -138,7 +138,7 @@ async function fetchFromSOAP(event) {
 		console.error('Error en consulta SOAP:', error);
 		document.getElementById('soap-results').innerHTML = `
 			<div style="text-align: center; padding: 20px; color: #dc3545;">
-				<h4>❌ Error de conexión</h4>
+				<h4>Error de conexión</h4>
 				<p>No se pudo conectar con la API SOAP</p>
 			</div>
 		`;
@@ -155,7 +155,7 @@ async function fetchFromSOAP(event) {
 	} finally {
 		const button = event ? event.target : document.querySelector('button[onclick="fetchFromSOAP(event)"]');
 		button.disabled = false;
-		button.innerHTML = '🔄 Consultar API SOAP Ahora';
+		button.innerHTML = ' Consultar API SOAP Ahora';
 	}
 }
 
@@ -163,7 +163,7 @@ async function fetchFromSOAP(event) {
 function displaySOAPResults(data) {
 	let html = `
 		<div style="margin-bottom: 20px;">
-			<h4>✅ Consulta SOAP Exitosa</h4>
+			<h4>Consulta SOAP Exitosa</h4>
 			<div class="metric">
 				<span>Registros procesados:</span>
 				<span class="metric-value">${data.data?.totalRegistros || 0}</span>
@@ -182,7 +182,7 @@ function displaySOAPResults(data) {
 	// Mostrar datos de cambio del dólar
 	if (data.data?.data?.cambioDolar && data.data.data.cambioDolar.length > 0) {
 		html += `
-			<h4>💰 Cambio del Dólar (Referencia)</h4>
+			<h4> Cambio del Dólar (Referencia)</h4>
 			<table class="table">
 				<thead>
 					<tr>
@@ -208,7 +208,7 @@ function displaySOAPResults(data) {
 	// Mostrar tipos de cambio si hay
 	if (data.data?.data?.tiposCambio && data.data.data.tiposCambio.length > 0) {
 		html += `
-			<h4>💱 Tipos de Cambio</h4>
+			<h4>Tipos de Cambio</h4>
 			<table class="table">
 				<thead>
 					<tr>
@@ -240,7 +240,7 @@ function displaySOAPResults(data) {
 	// Mostrar monedas si hay
 	if (data.data?.data?.monedas && data.data.data.monedas.length > 0) {
 		html += `
-			<h4>🏦 Catálogo de Monedas</h4>
+			<h4> Catálogo de Monedas</h4>
 			<table class="table">
 				<thead>
 					<tr>
@@ -269,10 +269,10 @@ function displaySOAPResults(data) {
 	if (!data.data?.data?.cambioDolar?.length && !data.data?.data?.tiposCambio?.length && !data.data?.data?.monedas?.length) {
 		html += `
 			<div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-				<h4>📊 Datos Procesados</h4>
+				<h4>Datos Procesados</h4>
 				<p>La consulta SOAP se ejecutó correctamente. Los datos se guardaron en la base de datos.</p>
 				<p>Total de elementos procesados: <strong>${data.data?.totalRegistros || 0}</strong></p>
-				<p><a href="/api-soap" onclick="window.location.reload(); return false;">🔄 Actualizar página</a> para ver más detalles.</p>
+				<p><a href="/api-soap" onclick="window.location.reload(); return false;">Actualizar página</a> para ver más detalles.</p>
 			</div>
 		`;
 	}
@@ -285,22 +285,22 @@ async function testConnection(event) {
 	try {
 		const button = event ? event.target : document.querySelector('button[onclick="testConnection(event)"]');
 		button.disabled = true;
-		button.innerHTML = '🔍 Probando...';
+		button.innerHTML = 'Probando...';
 		
 		const response = await fetch(`${API_BASE}/test/soap-connection`);
 		const data = await response.json();
 		
 		if (response.ok && data.success) {
-			alert('✅ Conexión exitosa con la API SOAP del Banco de Guatemala');
+			alert('Conexión exitosa con la API SOAP del Banco de Guatemala');
 		} else {
-			alert('⚠️ Problemas con la conexión a la API SOAP');
+			alert('Problemas con la conexión a la API SOAP');
 		}
 	} catch (error) {
-		alert('❌ Error probando conexión');
+		alert('Error probando conexión');
 	} finally {
 		const button = event ? event.target : document.querySelector('button[onclick="testConnection(event)"]');
 		button.disabled = false;
-		button.innerHTML = '🔍 Probar Conexión';
+		button.innerHTML = 'Probar Conexión';
 	}
 }
 
@@ -313,7 +313,7 @@ async function viewRawXML(event) {
 		
 		if (xmlViewer.style.display === 'none') {
 			button.disabled = true;
-			button.innerHTML = '📄 Cargando...';
+			button.innerHTML = 'Cargando...';
 			
 			// Obtener XML real del backend
 			try {
@@ -330,13 +330,13 @@ async function viewRawXML(event) {
 			}
 			
 			xmlViewer.style.display = 'block';
-			button.innerHTML = '🙈 Ocultar XML';
+			button.innerHTML = 'Ocultar XML';
 		} else {
 			xmlViewer.style.display = 'none';
-			button.innerHTML = '📄 Ver XML Completo';
+			button.innerHTML = 'Ver XML Completo';
 		}
 	} catch (error) {
-		alert('❌ Error mostrando XML');
+		alert('Error mostrando XML');
 	} finally {
 		button.disabled = false;
 	}
