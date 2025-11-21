@@ -10,29 +10,7 @@ import Layout from '../layouts/Layout.astro';
 	<div id="dashboard">
 		<div class="dashboard-grid">
 			<div class="card">
-				<h3>🔄 Estado del Sistema</h3>
-				<div class="metric">
-					<span>Backend API</span>
-					<span class="metric-value" id="backend-status">
-						<span class="status-indicator status-warning"></span>Verificando...
-					</span>
-				</div>
-				<div class="metric">
-					<span>Base de Datos</span>
-					<span class="metric-value" id="db-status">
-						<span class="status-indicator status-warning"></span>Verificando...
-					</span>
-				</div>
-				<div class="metric">
-					<span>API Banguat</span>
-					<span class="metric-value" id="soap-status">
-						<span class="status-indicator status-warning"></span>Verificando...
-					</span>
-				</div>
-			</div>
-
-			<div class="card">
-				<h3>📈 Tipos de Cambio Actuales</h3>
+				<h3>Tipos de Cambio Actuales</h3>
 				<div id="current-rates">
 					<div class="loading">
 						<div class="spinner"></div>
@@ -42,7 +20,7 @@ import Layout from '../layouts/Layout.astro';
 			</div>
 
 			<div class="card">
-				<h3>💰 Dólar Estadounidense</h3>
+				<h3>Dólar Estadounidense</h3>
 				<div id="usd-info">
 					<div class="loading">
 						<div class="spinner"></div>
@@ -52,7 +30,7 @@ import Layout from '../layouts/Layout.astro';
 			</div>
 
 			<div class="card">
-				<h3>📊 Estadísticas</h3>
+				<h3>Estadísticas</h3>
 				<div id="stats">
 					<div class="loading">
 						<div class="spinner"></div>
@@ -63,18 +41,18 @@ import Layout from '../layouts/Layout.astro';
 		</div>
 
 		<div class="chart-container">
-			<h3>📈 Histórico del Tipo de Cambio</h3>
+			<h3>Histórico del Tipo de Cambio</h3>
 			<canvas id="exchangeChart" width="400" height="200"></canvas>
 		</div>
 
 		<div class="chart-container">
-			<h3>💱 Comparativo de Monedas</h3>
+			<h3>Comparativo de Monedas</h3>
 			<canvas id="currencyChart" width="400" height="200"></canvas>
 		</div>
 
 		<div style="margin-top: 20px; text-align: center;">
-			<button class="btn btn-success" onclick="updateData()">🔄 Actualizar Datos desde API SOAP</button>
-			<button class="btn" onclick="refreshDashboard()">↻ Refrescar Dashboard</button>
+			<button class="btn btn-success" onclick="updateData()">Actualizar Datos desde API SOAP</button>
+			<button class="btn" onclick="refreshDashboard()">Refrescar Dashboard</button>
 		</div>
 	</div>
 </Layout>
@@ -84,28 +62,19 @@ const API_BASE = 'http://localhost:3001/api';
 let exchangeChart = null;
 let currencyChart = null;
 
-// Función para verificar estado del sistema
+// Función para verificar estado del sistema (ahora solo log)
 async function checkSystemStatus() {
 	try {
-		// Verificar backend
 		const healthResponse = await fetch(`${API_BASE}/../health`);
 		const healthData = await healthResponse.json();
 		
-		document.getElementById('backend-status').innerHTML = 
-			`<span class="status-indicator status-success"></span>Activo`;
-		
-		document.getElementById('db-status').innerHTML = healthData.database ? 
-			`<span class="status-indicator status-success"></span>Conectada` :
-			`<span class="status-indicator status-error"></span>Error`;
-
-		document.getElementById('soap-status').innerHTML = healthData.soapApi ? 
-			`<span class="status-indicator status-success"></span>Disponible` :
-			`<span class="status-indicator status-warning"></span>Verificando`;
-
+		console.log('Estado del Sistema:', {
+			backend: 'Activo',
+			database: healthData.database ? 'Conectada' : 'Error',
+			soapApi: healthData.soapApi ? 'Disponible' : 'Verificando'
+		});
 	} catch (error) {
 		console.error('Error verificando estado:', error);
-		document.getElementById('backend-status').innerHTML = 
-			`<span class="status-indicator status-error"></span>Error`;
 	}
 }
 
@@ -322,11 +291,11 @@ async function createCurrencyChart() {
 }
 
 // Función para actualizar datos desde la API SOAP
-async function updateData() {
+window.updateData = async function() {
 	try {
 		const button = event.target;
 		button.disabled = true;
-		button.innerHTML = '🔄 Actualizando...';
+		button.innerHTML = 'Actualizando...';
 		
 		const response = await fetch(`${API_BASE}/actualizar`, {
 			method: 'POST'
@@ -334,23 +303,23 @@ async function updateData() {
 		const data = await response.json();
 		
 		if (data.success) {
-			alert('✅ Datos actualizados exitosamente desde la API SOAP');
-			refreshDashboard();
+			alert('Datos actualizados exitosamente desde la API SOAP');
+			window.refreshDashboard();
 		} else {
-			alert('❌ Error actualizando datos: ' + data.message);
+			alert('Error actualizando datos: ' + data.message);
 		}
 	} catch (error) {
 		console.error('Error actualizando datos:', error);
-		alert('❌ Error de conexión');
+		alert('Error de conexión');
 	} finally {
 		const button = event.target;
 		button.disabled = false;
-		button.innerHTML = '🔄 Actualizar Datos desde API SOAP';
+		button.innerHTML = 'Actualizar Datos desde API SOAP';
 	}
 }
 
 // Función para refrescar el dashboard
-async function refreshDashboard() {
+window.refreshDashboard = async function() {
 	await Promise.all([
 		checkSystemStatus(),
 		loadCurrentRates(),
@@ -363,11 +332,11 @@ async function refreshDashboard() {
 
 // Inicializar dashboard cuando la página carga
 document.addEventListener('DOMContentLoaded', () => {
-	refreshDashboard();
+	window.refreshDashboard();
 });
 
 // Actualizar automáticamente cada 5 minutos
-setInterval(refreshDashboard, 300000);
+setInterval(() => window.refreshDashboard(), 300000);
 </script>
 
 <style>

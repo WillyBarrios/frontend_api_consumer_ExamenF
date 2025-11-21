@@ -4,12 +4,12 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="Base de Datos">
 	<div class="db-section">
-		<h2>🗄️ Gestión de Base de Datos</h2>
+		<h2>Gestión de Base de Datos</h2>
 		<p>Consulta y administra los datos almacenados en la base de datos MariaDB del sistema.</p>
 		
 		<div class="dashboard-grid">
 			<div class="card">
-				<h3>🔗 Estado de Conexión</h3>
+				<h3>Estado de Conexión</h3>
 				<div class="metric">
 					<span>Base de Datos</span>
 					<span class="metric-value" id="db-connection-status">
@@ -27,7 +27,7 @@ import Layout from '../layouts/Layout.astro';
 			</div>
 
 			<div class="card">
-				<h3>📊 Estadísticas Generales</h3>
+				<h3>Estadísticas Generales</h3>
 				<div id="db-stats">
 					<div class="loading">
 						<div class="spinner"></div>
@@ -37,20 +37,20 @@ import Layout from '../layouts/Layout.astro';
 			</div>
 
 			<div class="card">
-				<h3>⚡ Acciones de BD</h3>
-				<button class="btn btn-success" onclick="refreshData()" style="width: 100%; margin: 5px 0;">
-					🔄 Actualizar Datos
+				<h3>Acciones de BD</h3>
+				<button class="btn btn-success" onclick="refreshData(event)" style="width: 100%; margin: 5px 0;">
+					Actualizar Datos
 				</button>
 				<button class="btn" onclick="viewTables()" style="width: 100%; margin: 5px 0;">
-					📋 Ver Tablas
+					Ver Tablas
 				</button>
 				<button class="btn" onclick="exportData()" style="width: 100%; margin: 5px 0;">
-					💾 Exportar Datos
+					Exportar Datos
 				</button>
 			</div>
 
 			<div class="card">
-				<h3>📈 Últimas Actualizaciones</h3>
+				<h3>Últimas Actualizaciones</h3>
 				<div id="recent-updates">
 					<div class="loading">
 						<div class="spinner"></div>
@@ -62,15 +62,15 @@ import Layout from '../layouts/Layout.astro';
 
 		<!-- Sección de Tablas -->
 		<div class="chart-container">
-			<h3>💰 Tipos de Cambio Históricos</h3>
+			<h3>Tipos de Cambio Históricos</h3>
 			<div class="filter-controls" style="margin-bottom: 20px;">
 				<select id="currency-filter" class="btn">
 					<option value="">Todas las monedas</option>
 				</select>
 				<input type="date" id="date-from" class="btn" style="margin: 0 10px;">
 				<input type="date" id="date-to" class="btn">
-				<button class="btn" onclick="applyFilter()">🔍 Filtrar</button>
-				<button class="btn" onclick="clearFilter()">🗑️ Limpiar</button>
+				<button class="btn" onclick="applyFilter()">Filtrar</button>
+				<button class="btn" onclick="clearFilter()">Limpiar</button>
 			</div>
 			<div id="exchange-history">
 				<div class="loading">
@@ -81,17 +81,7 @@ import Layout from '../layouts/Layout.astro';
 		</div>
 
 		<div class="chart-container">
-			<h3>🏦 Catálogo de Monedas</h3>
-			<div id="currency-catalog">
-				<div class="loading">
-					<div class="spinner"></div>
-					Cargando catálogo de monedas...
-				</div>
-			</div>
-		</div>
-
-		<div class="chart-container">
-			<h3>📝 Log de Consultas API</h3>
+			<h3>Log de Consultas API</h3>
 			<div id="api-log">
 				<div class="loading">
 					<div class="spinner"></div>
@@ -242,7 +232,7 @@ async function loadExchangeHistory(filters = {}) {
 	}
 }
 
-// Cargar catálogo de monedas
+// Cargar catálogo de monedas solo para filtro
 async function loadCurrencyCatalog() {
 	try {
 		const response = await fetch(`${API_BASE}/monedas`);
@@ -257,46 +247,9 @@ async function loadCurrencyCatalog() {
 				option.textContent = `${currency.descripcion} (${currency.simbolo})`;
 				currencyFilter.appendChild(option);
 			});
-			
-			// Mostrar tabla de monedas
-			let html = `
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Código</th>
-							<th>Descripción</th>
-							<th>Símbolo</th>
-							<th>Estado</th>
-							<th>Fecha Creación</th>
-						</tr>
-					</thead>
-					<tbody>
-			`;
-			
-			data.data.forEach(currency => {
-				html += `
-					<tr>
-						<td>${currency.codigo_moneda}</td>
-						<td>${currency.descripcion}</td>
-						<td>${currency.simbolo}</td>
-						<td>
-							<span class="status-indicator ${currency.activa ? 'status-success' : 'status-error'}"></span>
-							${currency.activa ? 'Activa' : 'Inactiva'}
-						</td>
-						<td>${new Date(currency.fecha_creacion).toLocaleDateString()}</td>
-					</tr>
-				`;
-			});
-			
-			html += '</tbody></table>';
-			document.getElementById('currency-catalog').innerHTML = html;
-		} else {
-			document.getElementById('currency-catalog').innerHTML = 
-				'<p style="text-align: center; color: #666;">No hay monedas registradas</p>';
 		}
 	} catch (error) {
-		document.getElementById('currency-catalog').innerHTML = 
-			'<p style="color: #dc3545;">Error cargando catálogo</p>';
+		console.error('Error cargando monedas para filtro:', error);
 	}
 }
 
@@ -350,7 +303,7 @@ async function loadAPILog() {
 }
 
 // Aplicar filtros
-function applyFilter() {
+window.applyFilter = function() {
 	const currency = document.getElementById('currency-filter').value;
 	const dateFrom = document.getElementById('date-from').value;
 	const dateTo = document.getElementById('date-to').value;
@@ -364,7 +317,7 @@ function applyFilter() {
 }
 
 // Limpiar filtros
-function clearFilter() {
+window.clearFilter = function() {
 	document.getElementById('currency-filter').value = '';
 	document.getElementById('date-from').value = '';
 	document.getElementById('date-to').value = '';
@@ -372,10 +325,12 @@ function clearFilter() {
 }
 
 // Refrescar datos
-async function refreshData() {
-	const button = event.target;
-	button.disabled = true;
-	button.innerHTML = '🔄 Actualizando...';
+window.refreshData = async function(event) {
+	if (event) {
+		const button = event.target;
+		button.disabled = true;
+		button.innerHTML = 'Actualizando...';
+	}
 	
 	await Promise.all([
 		checkDBConnection(),
@@ -386,54 +341,73 @@ async function refreshData() {
 		loadAPILog()
 	]);
 	
-	button.disabled = false;
-	button.innerHTML = '🔄 Actualizar Datos';
-	
-	alert('✅ Datos actualizados correctamente');
+	if (event) {
+		const button = event.target;
+		button.disabled = false;
+		button.innerHTML = 'Actualizar Datos';
+		alert('Datos actualizados correctamente');
+	}
 }
 
 // Ver información de tablas
-function viewTables() {
-	const tables = [
-		{ name: 'monedas', description: 'Catálogo de monedas disponibles', records: '10' },
-		{ name: 'tipos_cambio_historico', description: 'Histórico de tipos de cambio', records: '0' },
-		{ name: 'cambio_dolar_referencia', description: 'Referencias del dólar USD', records: '0' },
-		{ name: 'log_consultas_api', description: 'Log de consultas a la API', records: '0' }
-	];
-	
-	let html = '<h4>📋 Estructura de Tablas en la Base de Datos</h4>';
-	html += '<table class="table"><thead><tr><th>Tabla</th><th>Descripción</th><th>Registros</th></tr></thead><tbody>';
-	
-	tables.forEach(table => {
-		html += `
-			<tr>
-				<td><strong>${table.name}</strong></td>
-				<td>${table.description}</td>
-				<td>${table.records}</td>
-			</tr>
-		`;
-	});
-	
-	html += '</tbody></table>';
-	
-	document.getElementById('modal-title').innerHTML = '📊 Información de Tablas';
-	document.getElementById('modal-body').innerHTML = html;
-	document.getElementById('table-modal').style.display = 'block';
+window.viewTables = async function() {
+	try {
+		// Obtener estadísticas reales
+		const response = await fetch(`${API_BASE}/estadisticas`);
+		const data = await response.json();
+		
+		let totalMonedas = 0;
+		let totalRegistros = 0;
+		
+		if (data.success) {
+			totalMonedas = data.data.totalMonedas || 0;
+			totalRegistros = data.data.totalRegistros || 0;
+		}
+		
+		const tables = [
+			{ name: 'monedas', description: 'Catálogo de monedas disponibles', records: totalMonedas },
+			{ name: 'tipos_cambio_historico', description: 'Histórico de tipos de cambio', records: totalRegistros },
+			{ name: 'cambio_dolar_referencia', description: 'Referencias del dólar USD', records: 'N/A' },
+			{ name: 'log_consultas_api', description: 'Log de consultas a la API', records: 'N/A' }
+		];
+		
+		let html = '<h4>Estructura de Tablas en la Base de Datos</h4>';
+		html += '<table class="table"><thead><tr><th>Tabla</th><th>Descripción</th><th>Registros</th></tr></thead><tbody>';
+		
+		tables.forEach(table => {
+			html += `
+				<tr>
+					<td><strong>${table.name}</strong></td>
+					<td>${table.description}</td>
+					<td>${table.records}</td>
+				</tr>
+			`;
+		});
+		
+		html += '</tbody></table>';
+		
+		document.getElementById('modal-title').innerHTML = 'Información de Tablas';
+		document.getElementById('modal-body').innerHTML = html;
+		document.getElementById('table-modal').style.display = 'block';
+	} catch (error) {
+		console.error('Error cargando información de tablas:', error);
+		alert('Error cargando información de tablas');
+	}
 }
 
 // Exportar datos (simulado)
-function exportData() {
-	alert('🚧 Funcionalidad de exportación en desarrollo.\n\nPróximamente podrás exportar:\n• Tipos de cambio históricos\n• Catálogo de monedas\n• Log de consultas\n\nFormatos: CSV, Excel, JSON');
+window.exportData = function() {
+	alert('Funcionalidad de exportación en desarrollo.\n\nPróximamente podrás exportar:\n- Tipos de cambio históricos\n- Catálogo de monedas\n- Log de consultas\n\nFormatos: CSV, Excel, JSON');
 }
 
 // Cerrar modal
-function closeModal() {
+window.closeModal = function() {
 	document.getElementById('table-modal').style.display = 'none';
 }
 
 // Inicializar cuando carga la página
 document.addEventListener('DOMContentLoaded', () => {
-	refreshData();
+	window.refreshData();
 });
 </script>
 
