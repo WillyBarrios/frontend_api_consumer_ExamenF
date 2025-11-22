@@ -175,3 +175,12 @@ Este proyecto es de código abierto y está disponible bajo la licencia MIT.
 
 Willy Barrios
 
+![Dashboard](image.png)
+![Consumo de la API](image-1.png)
+![Proceso de Consumo de la API](image-2.png)
+![Prueba de conexion con la API](image-3.png)
+![Retorno del XML completo desde la API](image-4.png)
+![Vista a datos Almacenados en la Base de Datos](image-5.png)
+![Peticion para Actualizacion de datos en la Base de datos](image-6.png)
+![Informacion del Sistema](image-7.png)
+![Informacion del sistema P2](image-8.png)
