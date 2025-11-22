@@ -2,9 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
----
-import Layout from '../layouts/Layout.astro';
----
 
 <Layout title="Dashboard">
 	<div id="dashboard">
@@ -57,10 +54,20 @@ import Layout from '../layouts/Layout.astro';
 	</div>
 </Layout>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+declare const Chart: any;
+
+declare global {
+	interface Window {
+		updateData: (event?: Event) => Promise<void>;
+		refreshDashboard: () => Promise<void>;
+	}
+}
+
 const API_BASE = 'http://localhost:3001/api';
-let exchangeChart = null;
-let currencyChart = null;
+let exchangeChart: any = null;
+let currencyChart: any = null;
 
 // Función para verificar estado del sistema (ahora solo log)
 async function checkSystemStatus() {
@@ -86,7 +93,7 @@ async function loadCurrentRates() {
 		
 		if (data.success && data.data.length > 0) {
 			let html = '';
-			data.data.slice(0, 3).forEach(rate => {
+			data.data.slice(0, 3).forEach((rate: any) => {
 				html += `
 					<div class="metric">
 						<span>${rate.simbolo} ${rate.moneda_descripcion}</span>
@@ -94,14 +101,17 @@ async function loadCurrentRates() {
 					</div>
 				`;
 			});
-			document.getElementById('current-rates').innerHTML = html;
+			const currentRatesEl = document.getElementById('current-rates');
+			if (currentRatesEl) currentRatesEl.innerHTML = html;
 		} else {
-			document.getElementById('current-rates').innerHTML = 
-				'<p style="text-align: center; color: #666;">No hay datos disponibles</p>';
+			const currentRatesEl = document.getElementById('current-rates');
+			if (currentRatesEl) currentRatesEl.innerHTML = 
+				'<p style="text-align: center; color: #dc3545;">No hay datos disponibles</p>';
 		}
 	} catch (error) {
 		console.error('Error cargando tipos de cambio:', error);
-		document.getElementById('current-rates').innerHTML = 
+		const currentRatesEl = document.getElementById('current-rates');
+		if (currentRatesEl) currentRatesEl.innerHTML = 
 			'<p style="text-align: center; color: #dc3545;">Error cargando datos</p>';
 	}
 }
@@ -109,85 +119,91 @@ async function loadCurrentRates() {
 // Función para cargar información del dólar
 async function loadUSDInfo() {
 	try {
-		const response = await fetch(`${API_BASE}/dolar`);
+		const response = await fetch(`${API_BASE}/tipos-cambio/USD`);
 		const data = await response.json();
 		
 		if (data.success && data.data.length > 0) {
 			const usd = data.data[0];
-			document.getElementById('usd-info').innerHTML = `
+			const usdInfoEl = document.getElementById('usd-info');
+			if (usdInfoEl) usdInfoEl.innerHTML = `
 				<div class="metric">
 					<span>Fecha</span>
 					<span class="metric-value">${usd.fecha}</span>
 				</div>
 				<div class="metric">
 					<span>Referencia</span>
-					<span class="metric-value">Q${usd.referencia}</span>
+					<span class="metric-value">Q${usd.tipo_referencia || 'N/A'}</span>
 				</div>
 			`;
 		} else {
-			document.getElementById('usd-info').innerHTML = 
-				'<p style="text-align: center; color: #666;">No hay datos del dólar</p>';
+			const usdInfoEl = document.getElementById('usd-info');
+			if (usdInfoEl) usdInfoEl.innerHTML = 
+				'<p style="text-align: center; color: #dc3545;">No hay datos disponibles</p>';
 		}
 	} catch (error) {
 		console.error('Error cargando info USD:', error);
-		document.getElementById('usd-info').innerHTML = 
+		const usdInfoEl = document.getElementById('usd-info');
+		if (usdInfoEl) usdInfoEl.innerHTML = 
 			'<p style="text-align: center; color: #dc3545;">Error cargando datos USD</p>';
 	}
 }
 
-// Función para cargar estadísticas
-async function loadStats() {
-	try {
-		const response = await fetch(`${API_BASE}/estadisticas`);
-		const data = await response.json();
-		
-		if (data.success) {
-			const stats = data.data;
-			document.getElementById('stats').innerHTML = `
-				<div class="metric">
-					<span>Total Monedas</span>
-					<span class="metric-value">${stats.totalMonedas}</span>
-				</div>
-				<div class="metric">
-					<span>Registros Históricos</span>
-					<span class="metric-value">${stats.totalRegistros}</span>
-				</div>
-				<div class="metric">
-					<span>Última Actualización</span>
-					<span class="metric-value">${stats.ultimaActualizacion || 'N/A'}</span>
-				</div>
-			`;
+		async function loadStats() {
+			try {
+				const response = await fetch(`${API_BASE}/estadisticas`);
+				const data = await response.json();
+				
+				if (data.success) {
+					const stats = data.data;
+					const statsEl = document.getElementById('stats');
+					if (statsEl) statsEl.innerHTML = `
+						<div class="metric">
+							<span>Total Monedas</span>
+							<span class="metric-value">${stats.totalMonedas}</span>
+						</div>
+						<div class="metric">
+							<span>Registros Históricos</span>
+							<span class="metric-value">${stats.totalRegistros}</span>
+						</div>
+						<div class="metric">
+							<span>Última Actualización</span>
+							<span class="metric-value">${stats.ultimaActualizacion || 'N/A'}</span>
+						</div>
+					`;
+				}
+			} catch (error) {
+				console.error('Error cargando estadísticas:', error);
+				const statsEl = document.getElementById('stats');
+				if (statsEl) statsEl.innerHTML = 
+					'<p style="text-align: center; color: #dc3545;">Error cargando estadísticas</p>';
+			}
 		}
-	} catch (error) {
-		console.error('Error cargando estadísticas:', error);
-		document.getElementById('stats').innerHTML = 
-			'<p style="text-align: center; color: #dc3545;">Error cargando estadísticas</p>';
-	}
-}
-
-// Función para crear gráfico de histórico
-async function createExchangeChart() {
-	try {
-		const response = await fetch(`${API_BASE}/tipos-cambio`);
-		const data = await response.json();
 		
-		if (data.success && data.data.length > 0) {
-			const ctx = document.getElementById('exchangeChart').getContext('2d');
+		async function createExchangeChart() {
+			try {
+				const response = await fetch(`${API_BASE}/historico`);
+				const data = await response.json();
+				
+				if (data.success && data.data.length > 0) {
+			const chartEl = document.getElementById('exchangeChart') as HTMLCanvasElement | null;
+			if (!chartEl) return;
+			const ctx = chartEl.getContext('2d');
+			if (!ctx) return;
 			
 			// Preparar datos para el gráfico
-			const labels = [...new Set(data.data.map(item => item.fecha))].slice(-30);
-			const datasets = [];
+			const labels = [...new Set(data.data.map((item: any) => item.fecha))].slice(-30);
+			const datasets: any[] = [];
 			
 			// Obtener monedas únicas
-			const monedas = [...new Set(data.data.map(item => item.moneda_descripcion))].slice(0, 3);
+			const monedas = [...new Set(data.data.map((item: any) => item.moneda_descripcion))].slice(0, 3);
 			const colores = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
 			
 			monedas.forEach((moneda, index) => {
-				const monedaData = data.data.filter(item => item.moneda_descripcion === moneda);
+				const monedaData = data.data.filter((item: any) => item.moneda_descripcion === moneda);
 				datasets.push({
 					label: moneda,
 					data: labels.map(fecha => {
-						const item = monedaData.find(d => d.fecha === fecha);
+						const item = monedaData.find((d: any) => d.fecha === fecha);
 						return item ? item.tipo_referencia : null;
 					}),
 					borderColor: colores[index],
@@ -227,23 +243,24 @@ async function createExchangeChart() {
 			});
 		}
 	} catch (error) {
-		console.error('Error creando gráfico:', error);
+		console.error('Error creando gráfico histórico:', error);
 	}
 }
 
-// Función para crear gráfico comparativo de monedas
 async function createCurrencyChart() {
 	try {
 		const response = await fetch(`${API_BASE}/tipos-cambio`);
 		const data = await response.json();
 		
 		if (data.success && data.data.length > 0) {
-			const ctx = document.getElementById('currencyChart').getContext('2d');
+			const monedas = data.data.slice(0, 6);
+			const chartEl = document.getElementById('currencyChart') as HTMLCanvasElement | null;
+			if (!chartEl) return;
+			const ctx = chartEl.getContext('2d');
 			
 			// Obtener datos actuales de cada moneda
-			const monedas = data.data.slice(0, 6);
-			const labels = monedas.map(item => item.moneda_descripcion);
-			const valores = monedas.map(item => item.tipo_referencia || 0);
+			const labels = monedas.map((item: any) => item.moneda_descripcion);
+			const valores = monedas.map((item: any) => item.tipo_referencia || 0);
 			
 			if (currencyChart) {
 				currencyChart.destroy();
@@ -291,9 +308,10 @@ async function createCurrencyChart() {
 }
 
 // Función para actualizar datos desde la API SOAP
-window.updateData = async function() {
+window.updateData = async function(event?: Event) {
 	try {
-		const button = event.target;
+		const button = event?.target as HTMLButtonElement;
+		if (!button) return;
 		button.disabled = true;
 		button.innerHTML = 'Actualizando...';
 		
@@ -310,11 +328,12 @@ window.updateData = async function() {
 		}
 	} catch (error) {
 		console.error('Error actualizando datos:', error);
-		alert('Error de conexión');
 	} finally {
-		const button = event.target;
-		button.disabled = false;
-		button.innerHTML = 'Actualizar Datos desde API SOAP';
+		const button = event?.target as HTMLButtonElement;
+		if (button) {
+			button.disabled = false;
+			button.innerHTML = 'Actualizar Datos desde API SOAP';
+		}
 	}
 }
 

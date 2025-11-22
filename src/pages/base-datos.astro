@@ -102,6 +102,17 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
+declare global {
+	interface Window {
+		applyFilter: () => void;
+		clearFilter: () => void;
+		refreshData: (event?: Event) => Promise<void>;
+		viewTables: () => Promise<void>;
+		exportData: () => void;
+		closeModal: () => void;
+	}
+}
+
 const API_BASE = 'http://localhost:3001/api';
 
 // Verificar estado de la conexión a BD
@@ -110,12 +121,18 @@ async function checkDBConnection() {
 		const response = await fetch(`${API_BASE}/../health`);
 		const data = await response.json();
 		
-		document.getElementById('db-connection-status').innerHTML = data.database ? 
-			`<span class="status-indicator status-success"></span>Conectada` :
-			`<span class="status-indicator status-error"></span>Desconectada`;
+		const statusElement = document.getElementById('db-connection-status');
+		if (statusElement) {
+			statusElement.innerHTML = data.database ? 
+				`<span class="status-indicator status-success"></span>Conectada` :
+				`<span class="status-indicator status-error"></span>Desconectada`;
+		}
 	} catch (error) {
-		document.getElementById('db-connection-status').innerHTML = 
-			`<span class="status-indicator status-error"></span>Error`;
+		const statusElement = document.getElementById('db-connection-status');
+		if (statusElement) {
+			statusElement.innerHTML = 
+				`<span class="status-indicator status-error"></span>Error`;
+		}
 	}
 }
 
@@ -125,9 +142,12 @@ async function loadDBStats() {
 		const response = await fetch(`${API_BASE}/estadisticas`);
 		const data = await response.json();
 		
+		const statsElement = document.getElementById('db-stats');
+		if (!statsElement) return;
+		
 		if (data.success) {
 			const stats = data.data;
-			document.getElementById('db-stats').innerHTML = `
+			statsElement.innerHTML = `
 				<div class="metric">
 					<span>Total Monedas</span>
 					<span class="metric-value">${stats.totalMonedas || 0}</span>
@@ -142,12 +162,15 @@ async function loadDBStats() {
 				</div>
 			`;
 		} else {
-			document.getElementById('db-stats').innerHTML = 
+			statsElement.innerHTML = 
 				'<p style="color: #dc3545;">Error cargando estadísticas</p>';
 		}
 	} catch (error) {
-		document.getElementById('db-stats').innerHTML = 
-			'<p style="color: #dc3545;">Error de conexión</p>';
+		const statsElement = document.getElementById('db-stats');
+		if (statsElement) {
+			statsElement.innerHTML = 
+				'<p style="color: #dc3545;">Error de conexión</p>';
+		}
 	}
 }
 
@@ -159,7 +182,7 @@ async function loadRecentUpdates() {
 		
 		if (data.success && data.data.length > 0) {
 			let html = '';
-			data.data.slice(0, 5).forEach(item => {
+			data.data.slice(0, 5).forEach((item: any) => {
 				html += `
 					<div class="metric">
 						<span>${item.moneda_descripcion}</span>
@@ -167,19 +190,22 @@ async function loadRecentUpdates() {
 					</div>
 				`;
 			});
-			document.getElementById('recent-updates').innerHTML = html;
-		} else {
-			document.getElementById('recent-updates').innerHTML = 
-				'<p style="color: #666;">No hay actualizaciones recientes</p>';
+			const recentUpdatesElement = document.getElementById('recent-updates');
+			if (recentUpdatesElement) {
+				recentUpdatesElement.innerHTML = html;
+			}
 		}
 	} catch (error) {
-		document.getElementById('recent-updates').innerHTML = 
-			'<p style="color: #dc3545;">Error cargando actualizaciones</p>';
+		const recentUpdatesElement = document.getElementById('recent-updates');
+		if (recentUpdatesElement) {
+			recentUpdatesElement.innerHTML = 
+				'<p style="color: #dc3545;">Error cargando actualizaciones</p>';
+		}
 	}
 }
 
 // Cargar histórico de tipos de cambio
-async function loadExchangeHistory(filters = {}) {
+async function loadExchangeHistory(filters: { currency?: string; dateFrom?: string; dateTo?: string } = {}) {
 	try {
 		let url = `${API_BASE}/tipos-cambio?`;
 		if (filters.currency) url += `moneda=${filters.currency}&`;
@@ -206,7 +232,7 @@ async function loadExchangeHistory(filters = {}) {
 					<tbody>
 			`;
 			
-			data.data.forEach(item => {
+			data.data.forEach((item: any) => {
 				html += `
 					<tr>
 						<td>${item.fecha}</td>
@@ -221,14 +247,23 @@ async function loadExchangeHistory(filters = {}) {
 			});
 			
 			html += '</tbody></table>';
-			document.getElementById('exchange-history').innerHTML = html;
+			const exchangeHistoryElement = document.getElementById('exchange-history');
+			if (exchangeHistoryElement) {
+				exchangeHistoryElement.innerHTML = html;
+			}
 		} else {
-			document.getElementById('exchange-history').innerHTML = 
-				'<p style="text-align: center; color: #666;">No se encontraron datos con los filtros aplicados</p>';
+			const exchangeHistoryElement = document.getElementById('exchange-history');
+			if (exchangeHistoryElement) {
+				exchangeHistoryElement.innerHTML = 
+					'<p style="text-align: center; color: #666;">No se encontraron datos con los filtros aplicados</p>';
+			}
 		}
 	} catch (error) {
-		document.getElementById('exchange-history').innerHTML = 
-			'<p style="color: #dc3545;">Error cargando histórico</p>';
+		const exchangeHistoryElement = document.getElementById('exchange-history');
+		if (exchangeHistoryElement) {
+			exchangeHistoryElement.innerHTML = 
+				'<p style="color: #dc3545;">Error cargando histórico</p>';
+		}
 	}
 }
 
@@ -241,12 +276,14 @@ async function loadCurrencyCatalog() {
 		if (data.success && data.data.length > 0) {
 			// Llenar el filtro de monedas
 			const currencyFilter = document.getElementById('currency-filter');
-			data.data.forEach(currency => {
-				const option = document.createElement('option');
-				option.value = currency.codigo_moneda;
-				option.textContent = `${currency.descripcion} (${currency.simbolo})`;
-				currencyFilter.appendChild(option);
-			});
+			if (currencyFilter) {
+				data.data.forEach((currency: any) => {
+					const option = document.createElement('option');
+					option.value = currency.codigo_moneda;
+					option.textContent = `${currency.descripcion} (${currency.simbolo})`;
+					currencyFilter.appendChild(option);
+				});
+			}
 		}
 	} catch (error) {
 		console.error('Error cargando monedas para filtro:', error);
@@ -295,20 +332,32 @@ async function loadAPILog() {
 		});
 		
 		html += '</tbody></table>';
-		document.getElementById('api-log').innerHTML = html;
+		const apiLogElement = document.getElementById('api-log');
+		if (apiLogElement) {
+			apiLogElement.innerHTML = html;
+		}
 	} catch (error) {
-		document.getElementById('api-log').innerHTML = 
-			'<p style="color: #dc3545;">Error cargando log</p>';
+		const apiLogElement = document.getElementById('api-log');
+		if (apiLogElement) {
+			apiLogElement.innerHTML = 
+				'<p style="color: #dc3545;">Error cargando log</p>';
+		}
 	}
 }
 
 // Aplicar filtros
 window.applyFilter = function() {
-	const currency = document.getElementById('currency-filter').value;
-	const dateFrom = document.getElementById('date-from').value;
-	const dateTo = document.getElementById('date-to').value;
+	const currencyElement = document.getElementById('currency-filter') as HTMLSelectElement | null;
+	const dateFromElement = document.getElementById('date-from') as HTMLInputElement | null;
+	const dateToElement = document.getElementById('date-to') as HTMLInputElement | null;
 	
-	const filters = {};
+	if (!currencyElement || !dateFromElement || !dateToElement) return;
+	
+	const currency = currencyElement.value;
+	const dateFrom = dateFromElement.value;
+	const dateTo = dateToElement.value;
+	
+	const filters: { currency?: string; dateFrom?: string; dateTo?: string } = {};
 	if (currency) filters.currency = currency;
 	if (dateFrom) filters.dateFrom = dateFrom;
 	if (dateTo) filters.dateTo = dateTo;
@@ -318,18 +367,24 @@ window.applyFilter = function() {
 
 // Limpiar filtros
 window.clearFilter = function() {
-	document.getElementById('currency-filter').value = '';
-	document.getElementById('date-from').value = '';
-	document.getElementById('date-to').value = '';
+	const currencyElement = document.getElementById('currency-filter') as HTMLSelectElement | null;
+	const dateFromElement = document.getElementById('date-from') as HTMLInputElement | null;
+	const dateToElement = document.getElementById('date-to') as HTMLInputElement | null;
+	
+	if (currencyElement) currencyElement.value = '';
+	if (dateFromElement) dateFromElement.value = '';
+	if (dateToElement) dateToElement.value = '';
 	loadExchangeHistory();
 }
 
 // Refrescar datos
 window.refreshData = async function(event) {
 	if (event) {
-		const button = event.target;
-		button.disabled = true;
-		button.innerHTML = 'Actualizando...';
+		const button = event.target as HTMLButtonElement;
+		if (button) {
+			button.disabled = true;
+			button.innerHTML = 'Actualizando...';
+		}
 	}
 	
 	await Promise.all([
@@ -342,14 +397,17 @@ window.refreshData = async function(event) {
 	]);
 	
 	if (event) {
-		const button = event.target;
-		button.disabled = false;
-		button.innerHTML = 'Actualizar Datos';
-		alert('Datos actualizados correctamente');
+		const button = event.target as HTMLButtonElement;
+		if (button) {
+			button.disabled = false;
+			button.innerHTML = 'Actualizar Datos';
+		}
 	}
+	
+	alert('Datos actualizados correctamente');
 }
 
-// Ver información de tablas
+// Ver tablas
 window.viewTables = async function() {
 	try {
 		// Obtener estadísticas reales
@@ -386,9 +444,13 @@ window.viewTables = async function() {
 		
 		html += '</tbody></table>';
 		
-		document.getElementById('modal-title').innerHTML = 'Información de Tablas';
-		document.getElementById('modal-body').innerHTML = html;
-		document.getElementById('table-modal').style.display = 'block';
+		const modalTitle = document.getElementById('modal-title');
+		const modalBody = document.getElementById('modal-body');
+		const tableModal = document.getElementById('table-modal');
+		
+		if (modalTitle) modalTitle.innerHTML = 'Información de Tablas';
+		if (modalBody) modalBody.innerHTML = html;
+		if (tableModal) tableModal.style.display = 'block';
 	} catch (error) {
 		console.error('Error cargando información de tablas:', error);
 		alert('Error cargando información de tablas');
@@ -396,13 +458,15 @@ window.viewTables = async function() {
 }
 
 // Exportar datos (simulado)
-window.exportData = function() {
-	alert('Funcionalidad de exportación en desarrollo.\n\nPróximamente podrás exportar:\n- Tipos de cambio históricos\n- Catálogo de monedas\n- Log de consultas\n\nFormatos: CSV, Excel, JSON');
-}
-
 // Cerrar modal
 window.closeModal = function() {
-	document.getElementById('table-modal').style.display = 'none';
+	const tableModal = document.getElementById('table-modal');
+	if (tableModal) tableModal.style.display = 'none';
+}
+// Cerrar modal
+window.closeModal = function() {
+	const tableModal = document.getElementById('table-modal');
+	if (tableModal) tableModal.style.display = 'none';
 }
 
 // Inicializar cuando carga la página
